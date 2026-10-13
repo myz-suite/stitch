@@ -300,6 +300,14 @@ select {
   max-width: var(--panel-max);
   margin: 0 auto;
   padding: 0 0 var(--sp-8);
+  min-height: 0;
+}
+
+/* Panels must keep their natural height: without this a column flex parent with a
+   max-height shrinks them (flex-shrink defaults to 1) and each panel clips its own
+   content instead of letting the column scroll. */
+.mode-side > * {
+  flex: 0 0 auto;
 }
 
 @media (min-width: 880px) {
@@ -321,6 +329,7 @@ select {
     top: calc(var(--appbar-h) + var(--sp-3));
     max-height: calc(100vh - var(--appbar-h) - var(--sp-6));
     overflow-y: auto;
+    overscroll-behavior: contain;
     padding-right: var(--sp-1);
   }
 }
