@@ -41,29 +41,31 @@ export default function App() {
   return (
     <div className="app">
       <header className="appbar">
-        <div className="brand">
-          <span className="brand-mark">◨</span>
-          <span className="brand-name">Stitch Web</span>
-        </div>
-        <div className="appbar-center">
-          <Segmented
-            size="sm"
-            value={mode}
-            options={[
-              { value: 'screenshot', label: '截图拼接', icon: <IconStack width={15} height={15} /> },
-              { value: 'collage', label: '拼图', icon: <IconGrid width={15} height={15} /> },
-              { value: 'showcase', label: '展示图', icon: <IconPhone width={15} height={15} /> },
-            ]}
-            onChange={(m) => setMode(m as Mode)}
-          />
-        </div>
-        <div className="appbar-right">
-          {assets.length > 0 ? (
-            <button type="button" className="ghost-btn" onClick={clear} title="清空全部图片">
-              <IconTrash width={16} height={16} />
-              <span>清空</span>
-            </button>
-          ) : null}
+        <div className="appbar-inner">
+          <div className="brand">
+            <span className="brand-mark">◨</span>
+            <span className="brand-name">Stitch Web</span>
+          </div>
+          <div className="appbar-center">
+            <Segmented
+              size="sm"
+              value={mode}
+              options={[
+                { value: 'screenshot', label: '截图拼接', icon: <IconStack width={15} height={15} /> },
+                { value: 'collage', label: '拼图', icon: <IconGrid width={15} height={15} /> },
+                { value: 'showcase', label: '展示图', icon: <IconPhone width={15} height={15} /> },
+              ]}
+              onChange={(m) => setMode(m as Mode)}
+            />
+          </div>
+          <div className="appbar-right">
+            {assets.length > 0 ? (
+              <button type="button" className="ghost-btn" onClick={clear} title="清空全部图片">
+                <IconTrash width={16} height={16} />
+                <span>清空</span>
+              </button>
+            ) : null}
+          </div>
         </div>
       </header>
 
