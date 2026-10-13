@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { Mode } from './types';
 import { useAssets } from './hooks/useAssets';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { ScreenshotMode } from './modes/ScreenshotMode';
 import { CollageMode } from './modes/CollageMode';
 import { ShowcaseMode } from './modes/ShowcaseMode';
@@ -73,13 +74,15 @@ export default function App() {
       {busy ? <div className="banner banner-info">正在读取图片…</div> : null}
 
       <main className="app-main">
-        {mode === 'screenshot' ? (
-          <ScreenshotMode assets={assets} onAdd={addFiles} onRemove={remove} onMove={move} />
-        ) : mode === 'collage' ? (
-          <CollageMode assets={assets} onAdd={addFiles} onRemove={remove} onMove={move} onSwap={swap} />
-        ) : (
-          <ShowcaseMode assets={assets} onAdd={addFiles} onRemove={remove} onMove={move} onSwap={swap} />
-        )}
+        <ErrorBoundary key={mode} label={mode}>
+          {mode === 'screenshot' ? (
+            <ScreenshotMode assets={assets} onAdd={addFiles} onRemove={remove} onMove={move} />
+          ) : mode === 'collage' ? (
+            <CollageMode assets={assets} onAdd={addFiles} onRemove={remove} onMove={move} onSwap={swap} />
+          ) : (
+            <ShowcaseMode assets={assets} onAdd={addFiles} onRemove={remove} onMove={move} onSwap={swap} />
+          )}
+        </ErrorBoundary>
       </main>
 
       <footer className="appfoot">

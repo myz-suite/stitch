@@ -1251,3 +1251,38 @@ input[type='range']::-moz-range-thumb {
   overflow: hidden;
   clip: rect(0 0 0 0);
 }
+
+/* ---------- Error boundary fallback ---------- */
+.crash {
+  max-width: var(--panel-max);
+  margin: var(--sp-6) auto;
+  padding: var(--sp-5);
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.crash h2 {
+  margin: 0;
+  font-size: var(--fs-lg);
+}
+
+.crash-msg {
+  margin: 0;
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-sm);
+  background: var(--c-surface-2);
+  color: var(--c-text-muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: var(--fs-xs);
+  overflow-wrap: anywhere;
+}
+
+.crash-actions {
+  display: flex;
+  gap: var(--sp-2);
+  margin-top: var(--sp-1);
+}

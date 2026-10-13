@@ -343,6 +343,13 @@ export function ScreenshotMode({
         </Panel>
 
         {strategy === 'subtitle' ? (
+          assets.length === 0 ? (
+            <Panel title="字幕堆叠">
+              <p className="muted-note">
+                还没有图片。先添加截图：<b>首张显示完整画面</b>，之后的每张只保留底部字幕条，堆叠成字幕长图。
+              </p>
+            </Panel>
+          ) : (
           <>
             <Panel title="字幕堆叠">
               <div className="preset-row">
@@ -353,10 +360,7 @@ export function ScreenshotMode({
               <Slider
                 label="字幕条默认高度"
                 min={1}
-                max={Math.max(
-                  1,
-                  Math.round(Math.min(...assets.map((a) => lenOf(a))) * 0.6),
-                )}
+                max={Math.max(1, Math.round(Math.min(...assets.map((a) => lenOf(a))) * 0.6))}
                 value={params.subtitleHeight}
                 onChange={(subtitleHeight) =>
                   setParams((p) => ({
@@ -441,6 +445,7 @@ export function ScreenshotMode({
               </Panel>
             ) : null}
           </>
+          )
         ) : null}
 
         {needsAnalysis && assets.length > 1 ? (
