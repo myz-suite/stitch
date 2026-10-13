@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { AssetItem } from '../types';
 import { composeShowcase, DEFAULT_SHOWCASE, SHOWCASE_SIZES } from '../core/showcase';
 import type { ShowcaseParams, ShowcaseTemplate } from '../core/showcase';
 import { AssetTray } from '../components/AssetTray';
 import { DropZone } from '../components/DropZone';
 import { ExportPanel } from '../components/ExportPanel';
+import { PreviewCanvas } from '../components/PreviewCanvas';
 import { ColorField, Panel, Segmented, Select, Slider, TextInput, Toggle } from '../components/ui';
 
 const GRADIENTS: { from: string; to: string; angle: number }[] = [
@@ -34,44 +35,7 @@ export function ShowcaseMode({
   const [params, setParams] = useState<ShowcaseParams>(DEFAULT_SHOWCASE);
   const [selected, setSelected] = useState<number | null>(null);
 
-  const stageRef = useRef<HTMLDivElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [stageWidth, setStageWidth] = useState(0);
-
-  useEffect(() => {
-    const el = stageRef.current;
-    if (!el) return;
-    const update = () => setStageWidth(el.clientWidth);
-    update();
-    const ro = new ResizeObserver(update);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
-
   const size = SHOWCASE_SIZES.find((s) => s.id === params.sizeId) ?? SHOWCASE_SIZES[0];
-
-  const viewScale = useMemo(() => {
-    if (!stageWidth) return 0;
-    const maxH = Math.max(240, (typeof window !== 'undefined' ? window.innerHeight : 800) * 0.72);
-    return Math.min(stageWidth / size.w, maxH / size.h);
-  }, [stageWidth, size.w, size.h]);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas || viewScale <= 0) return;
-    const w = Math.max(1, Math.round(size.w * viewScale));
-    const h = Math.max(1, Math.round(size.h * viewScale));
-    if (canvas.width !== w || canvas.height !== h) {
-      canvas.width = w;
-      canvas.height = h;
-    }
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    const rendered = composeShowcase(assets, params, viewScale);
-    ctx.setTransform(1, 0, 0, 1, 0, 0);
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(rendered, 0, 0, canvas.width, canvas.height);
-  }, [assets, params, viewScale, size.w, size.h]);
 
   const set = (patch: Partial<ShowcaseParams>) => setParams((p) => ({ ...p, ...patch }));
 
@@ -101,9 +65,14 @@ export function ShowcaseMode({
             </div>
           </div>
         ) : (
-          <div className="stage" ref={stageRef}>
-            <canvas ref={canvasRef} className="stage-canvas is-contained" />
-          </div>
+          <PreviewCanvas
+            width={size.w}
+            height={size.h}
+            draw={(ctx, scale) => {
+              const rendered = composeShowcase(orderedAssets, params, scale);
+              ctx.drawImage(rendered, 0, 0);
+            }}
+          />
         )}
       </div>
 

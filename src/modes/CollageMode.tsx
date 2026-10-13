@@ -6,6 +6,7 @@ import { drawImageCover, get2d, makeCanvas, roundRectPath } from '../core/imageU
 import { AssetTray } from '../components/AssetTray';
 import { DropZone } from '../components/DropZone';
 import { ExportPanel } from '../components/ExportPanel';
+import { PreviewCanvas } from '../components/PreviewCanvas';
 import { Button, ColorField, Panel, Segmented, Slider, Toggle } from '../components/ui';
 import { IconSparkle, IconSwap } from '../components/Icons';
 
@@ -144,9 +145,7 @@ export function CollageMode({
   const [layoutIndex, setLayoutIndex] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
 
-  const stageRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [stageWidth, setStageWidth] = useState(0);
   const dragRef = useRef<{ cell: number; x: number; y: number } | null>(null);
 
   const layouts = useMemo(
@@ -171,37 +170,11 @@ export function CollageMode({
     setLayoutIndex((i) => Math.min(i, layouts.length - 1));
   }, [layouts.length]);
 
-  useEffect(() => {
-    const el = stageRef.current;
-    if (!el) return;
-    const update = () => setStageWidth(el.clientWidth);
-    update();
-    const ro = new ResizeObserver(update);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
-
   const geom = useMemo(() => buildGeom(assets, config, layout), [assets, config, layout]);
 
-  const viewScale = useMemo(() => {
-    if (!stageWidth || !geom.W) return 0;
-    const maxH = Math.max(240, (typeof window !== 'undefined' ? window.innerHeight : 800) * 0.72);
-    return Math.min(stageWidth / geom.W, maxH / geom.H);
-  }, [stageWidth, geom.W, geom.H]);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas || viewScale <= 0) return;
-    const w = Math.max(1, Math.round(geom.W * viewScale));
-    const h = Math.max(1, Math.round(geom.H * viewScale));
-    if (canvas.width !== w || canvas.height !== h) {
-      canvas.width = w;
-      canvas.height = h;
-    }
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    paintCollage(ctx, assets, config, geom, viewScale, selected);
-  }, [assets, config, geom, viewScale, selected]);
+  const drawPreview = (ctx: CanvasRenderingContext2D, scale: number) => {
+    paintCollage(ctx, assets, config, geom, scale, selected);
+  };
 
   const pointToCell = (clientX: number, clientY: number): { index: number; local: { x: number; y: number } } | null => {
     const canvas = canvasRef.current;
@@ -275,20 +248,20 @@ export function CollageMode({
             </div>
           </div>
         ) : (
-          <div className="stage" ref={stageRef}>
-            <canvas
-              ref={canvasRef}
-              className="stage-canvas is-contained"
-              style={{ touchAction: 'none' }}
-              onPointerDown={handlePointerDown}
-              onPointerMove={handlePointerMove}
-              onPointerUp={endDrag}
-              onPointerCancel={endDrag}
-              onDoubleClick={() => {
-                if (selected !== null) updateCell(selected, { offsetX: 0.5, offsetY: 0.5, zoom: 1 });
-              }}
-            />
-          </div>
+          <PreviewCanvas
+            width={geom.W}
+            height={geom.H}
+            draw={drawPreview}
+            canvasRef={canvasRef}
+            canvasStyle={{ touchAction: 'none' }}
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={endDrag}
+            onPointerCancel={endDrag}
+            onDoubleClick={() => {
+              if (selected !== null) updateCell(selected, { offsetX: 0.5, offsetY: 0.5, zoom: 1 });
+            }}
+          />
         )}
       </div>
 

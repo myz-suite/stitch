@@ -5,6 +5,7 @@ import type { MatchResult } from '../core/matching';
 import { AssetTray } from '../components/AssetTray';
 import { DropZone } from '../components/DropZone';
 import { ExportPanel } from '../components/ExportPanel';
+import { PreviewCanvas } from '../components/PreviewCanvas';
 import { Button, ColorField, Panel, Segmented, Slider, Toggle } from '../components/ui';
 import {
   IconArrowDownUp,
@@ -44,14 +45,6 @@ const STRATEGY_ICON: Record<Strategy, React.ReactNode> = {
   concat: <IconStack width={16} height={16} />,
 };
 
-function displayScale(outW: number, outH: number, containerW: number, dpr: number): number {
-  const target = Math.max(120, containerW) * Math.min(dpr, 2);
-  let scale = target / outW;
-  const maxH = 16000;
-  if (outH * scale > maxH) scale = maxH / outH;
-  return scale;
-}
-
 function defaultPerImage(index: number): PerImageStitch {
   return { mode: index === 0 ? 'full' : 'strip', height: 0, trimTop: 0, trimBottom: 0 };
 }
@@ -75,9 +68,7 @@ export function ScreenshotMode({
   const [analyzeToken, setAnalyzeToken] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
 
-  const stageRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [stageWidth, setStageWidth] = useState(0);
   const dragRef = useRef<{ index: number; startY: number; startX: number; base: number } | null>(null);
 
   const { axis, strategy, diffMode, fixedTop, fixedBottom } = params;
@@ -131,35 +122,9 @@ export function ScreenshotMode({
   }, [assets, axis, strategy, diffMode, fixedTop, fixedBottom, analyzeToken]);
 
   const geometry = useMemo(() => buildGeometry(assets, params), [assets, params]);
-  const viewRef = useRef(1);
 
-  useEffect(() => {
-    const el = stageRef.current;
-    if (!el) return;
-    const update = () => setStageWidth(el.clientWidth);
-    update();
-    const ro = new ResizeObserver(update);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
-
-  // Paint the live preview (plus the interactive selection outline).
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas || geometry.placements.length === 0) return;
-    const dpr = window.devicePixelRatio || 1;
-    const scale = displayScale(geometry.width, geometry.height, stageWidth, dpr);
-    viewRef.current = scale;
-    const w = Math.max(1, Math.round(geometry.width * scale));
-    const h = Math.max(1, Math.round(geometry.height * scale));
-    if (canvas.width !== w || canvas.height !== h) {
-      canvas.width = w;
-      canvas.height = h;
-    }
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+  const drawPreview = (ctx: CanvasRenderingContext2D, scale: number) => {
     paintStitch(ctx, geometry, params, scale);
-
     if (selected !== null && geometry.placements[selected]) {
       const pl = geometry.placements[selected];
       ctx.save();
@@ -169,7 +134,7 @@ export function ScreenshotMode({
       ctx.strokeRect(pl.dx, pl.dy, pl.dw, pl.dh);
       ctx.restore();
     }
-  }, [geometry, params, stageWidth, selected]);
+  };
 
   const busy = progress !== null;
   const canExport = assets.length > 0 && !busy;
@@ -281,11 +246,13 @@ export function ScreenshotMode({
             </div>
           </div>
         ) : (
-          <div className="stage" ref={stageRef}>
-            <canvas
-              ref={canvasRef}
-              className="stage-canvas"
-              style={strategy === 'subtitle' ? { touchAction: 'none' } : undefined}
+          <div className="stage-wrap">
+            <PreviewCanvas
+              width={geometry.width}
+              height={geometry.height}
+              draw={drawPreview}
+              canvasRef={canvasRef}
+              canvasStyle={strategy === 'subtitle' ? { touchAction: 'none', cursor: 'grab' } : undefined}
               onPointerDown={onPointerDown}
               onPointerMove={onPointerMove}
               onPointerUp={endDrag}
