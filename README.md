@@ -103,4 +103,4 @@ src/
 
 ## License
 
-LGPL-2.1（与原项目保持一致）。
+MIT
